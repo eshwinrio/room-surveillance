@@ -89,7 +89,7 @@ while True:
             recording = True
             print(f"[INFO] Motion detected! Recording started: {video_filename}")
         video_writer.write(frame)
-    elif recording and time.time() - last_motion_time > COOLDOWN_TIME:
+    elif recording and time() - last_motion_time > COOLDOWN_TIME:
         # Stop recording and upload
         video_writer.release()
         recording = False

@@ -47,3 +47,4 @@ def async_upload(
     
     upload_thread = Thread(target=upload)
     upload_thread.start()
+    
