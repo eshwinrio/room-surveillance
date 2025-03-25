@@ -4,10 +4,12 @@ from scp import SCPClient
 from threading import Thread
 
 
-def check_remote_directory(ssh, remote_path: str = "~/recordings") -> bool:
+REMOTE_WRITE_DIR = getenv("REMOTE_WRITE_DIR", "~/recordings")
+
+def check_remote_directory(ssh) -> bool:
     """Check if a remote directory exists, and create it if it doesn't."""
-    remote_path = getenv("REMOTE_WRITE_DIR", remote_path)
     try:
+        remote_path = REMOTE_WRITE_DIR.replace("\\", "/").strip()
         stdin, stdout, stderr = ssh.exec_command(f"ls {remote_path}")
         if not stdout.read().decode().strip():
             print(f"[INFO] Creating directory {remote_path} on Raspberry Pi.")
@@ -17,19 +19,13 @@ def check_remote_directory(ssh, remote_path: str = "~/recordings") -> bool:
         print(f"[ERROR] Failed to check/create remote directory: {e}")
         return False
 
-
-def async_upload(
-    scp_client: SCPClient,
-    local_path: str,
-    remote_dir: str = "~/recordings"
-) -> None:
+def async_upload(scp_client: SCPClient, local_path: str) -> None:
     """Uploads a file asynchronously to the Raspberry Pi."""
-    remote_dir = getenv("REMOTE_WRITE_DIR", remote_dir)
-    remote_file_path = path.join(remote_dir, path.basename(local_path)).replace("\\", "/")
-    
+    remote_file_path = path.join(REMOTE_WRITE_DIR, path.basename(local_path)).replace("\\", "/").strip()
+
     def upload():
         try:
-            print(f"[INFO] Uploading {local_path} to {remote_dir}...")
+            print(f"[INFO] Uploading {local_path} to {REMOTE_WRITE_DIR}...")
             scp_client.put(local_path, remote_path=remote_file_path)
             print(f"[INFO] Video uploaded to Raspberry Pi: {remote_file_path}")
         except FileNotFoundError:
