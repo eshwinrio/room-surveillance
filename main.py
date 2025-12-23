@@ -48,7 +48,7 @@ if __name__ == "__main__":
     cap.set(cv2.CAP_PROP_FPS, FRAME_RATE)
 
     # Initialize motion detector
-    motion_detector = cv2.createBackgroundSubtractorMOG2()
+    motion_detector = cv2.createBackgroundSubtractorMOG2(detectShadows=False)
 
     recording = False
     video_writer = None
@@ -74,6 +74,12 @@ if __name__ == "__main__":
         # Apply motion detection
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         motion_mask = motion_detector.apply(gray)
+
+        # Binarize and remove noise/shadows
+        _, motion_mask = cv2.threshold(motion_mask, 244, 255, cv2.THRESH_BINARY)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        motion_mask = cv2.morphologyEx(motion_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+        motion_mask = cv2.dilate(motion_mask, kernel, iterations=2)
 
         # Find contours of motion
         contours, _ = cv2.findContours(motion_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
